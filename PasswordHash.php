@@ -14,6 +14,7 @@
  * - La classe tente par défaut d'utiliser crypt() avant de se rabattre sur les hashages portables
  * - Ajout de la propriété $blowfish_mode. Utilisation du mode '2y' avec fallback
  *   vers le mode '2a' si PHP < 5.3.7
+ * - Utilisation si possible de la fonction openssl_random_pseudo_bytes() dans Password::getRandomBytes()
  */
 
 #
@@ -67,7 +68,10 @@ class PasswordHash {
 	function getRandomBytes($count)
 	{
 		$output = '';
-		if (@is_readable('/dev/urandom') &&
+		if (function_exists('openssl_random_pseudo_bytes')) {
+			$output = openssl_random_pseudo_bytes($count);
+		}
+		else if (@is_readable('/dev/urandom') &&
 		    ($fh = @fopen('/dev/urandom', 'rb'))) {
 			$output = fread($fh, $count);
 			fclose($fh);
