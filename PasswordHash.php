@@ -5,6 +5,9 @@
  * @version   0.3 / bobe
  * @author    Solar Designer <solar at openwall.com>
  * @link      http://www.openwall.com/phpass/
+ *
+ * Modifications:
+ * - Nommage des méthodes en camelCase
  */
 
 #
@@ -53,7 +56,7 @@ class PasswordHash {
 			$this->random_state .= getmypid();
 	}
 
-	function get_random_bytes($count)
+	function getRandomBytes($count)
 	{
 		$output = '';
 		if (is_readable('/dev/urandom') &&
@@ -99,7 +102,7 @@ class PasswordHash {
 		return $output;
 	}
 
-	function gensalt_private($input)
+	function gensaltPrivate($input)
 	{
 		$output = '$P$';
 		$output .= $this->itoa64[min($this->iteration_count_log2 +
@@ -109,7 +112,7 @@ class PasswordHash {
 		return $output;
 	}
 
-	function crypt_private($password, $setting)
+	function cryptPrivate($password, $setting)
 	{
 		$output = '*0';
 		if (substr($setting, 0, 2) == $output)
@@ -154,7 +157,7 @@ class PasswordHash {
 		return $output;
 	}
 
-	function gensalt_extended($input)
+	function gensaltExtended($input)
 	{
 		$count_log2 = min($this->iteration_count_log2 + 8, 24);
 		# This should be odd to not reveal weak DES keys, and the
@@ -172,7 +175,7 @@ class PasswordHash {
 		return $output;
 	}
 
-	function gensalt_blowfish($input)
+	function gensaltBlowfish($input)
 	{
 		# This one needs to use a different order of characters and a
 		# different encoding scheme from the one in encode64() above.
@@ -213,32 +216,32 @@ class PasswordHash {
 		return $output;
 	}
 
-	function HashPassword($password)
+	function hash($password)
 	{
 		$random = '';
 
 		if (CRYPT_BLOWFISH == 1 && !$this->portable_hashes) {
-			$random = $this->get_random_bytes(16);
+			$random = $this->getRandomBytes(16);
 			$hash =
-			    crypt($password, $this->gensalt_blowfish($random));
+			    crypt($password, $this->gensaltBlowfish($random));
 			if (strlen($hash) == 60)
 				return $hash;
 		}
 
 		if (CRYPT_EXT_DES == 1 && !$this->portable_hashes) {
 			if (strlen($random) < 3)
-				$random = $this->get_random_bytes(3);
+				$random = $this->getRandomBytes(3);
 			$hash =
-			    crypt($password, $this->gensalt_extended($random));
+			    crypt($password, $this->gensaltExtended($random));
 			if (strlen($hash) == 20)
 				return $hash;
 		}
 
 		if (strlen($random) < 6)
-			$random = $this->get_random_bytes(6);
+			$random = $this->getRandomBytes(6);
 		$hash =
-		    $this->crypt_private($password,
-		    $this->gensalt_private($random));
+		    $this->cryptPrivate($password,
+		    $this->gensaltPrivate($random));
 		if (strlen($hash) == 34)
 			return $hash;
 
@@ -248,9 +251,9 @@ class PasswordHash {
 		return '*';
 	}
 
-	function CheckPassword($password, $stored_hash)
+	function check($password, $stored_hash)
 	{
-		$hash = $this->crypt_private($password, $stored_hash);
+		$hash = $this->cryptPrivate($password, $stored_hash);
 		if ($hash[0] == '*')
 			$hash = crypt($password, $stored_hash);
 
@@ -258,4 +261,3 @@ class PasswordHash {
 	}
 }
 
-?>
