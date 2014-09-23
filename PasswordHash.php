@@ -8,6 +8,8 @@
  *
  * Modifications:
  * - Nommage des méthodes en camelCase
+ * - Utilisation de uniqid() pour l'initialisation de $random_state (repris de
+ *   l'adaptation de phpass dans Wordpress)
  */
 
 #
@@ -51,9 +53,7 @@ class PasswordHash {
 
 		$this->portable_hashes = $portable_hashes;
 
-		$this->random_state = microtime();
-		if (function_exists('getmypid'))
-			$this->random_state .= getmypid();
+		$this->random_state = microtime().uniqid(rand(), true);
 	}
 
 	function getRandomBytes($count)
