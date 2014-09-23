@@ -12,6 +12,8 @@
  *   l'adaptation de phpass dans Wordpress)
  * - Les arguments du constructeur sont rendus optionnels (le coût est fixé par défaut à 10)
  * - La classe tente par défaut d'utiliser crypt() avant de se rabattre sur les hashages portables
+ * - Ajout de la propriété $blowfish_mode. Utilisation du mode '2y' avec fallback
+ *   vers le mode '2a' si PHP < 5.3.7
  */
 
 #
@@ -41,6 +43,7 @@
 #
 class PasswordHash {
 	var $itoa64;
+	var $blowfish_mode = '2y';
 	var $iteration_count_log2 = 10;
 	var $portable_hashes;
 	var $random_state;
@@ -55,6 +58,10 @@ class PasswordHash {
 
 		$this->portable_hashes = $portable_hashes;
 		$this->random_state = microtime().uniqid(rand(), true);
+
+		if (version_compare(PHP_VERSION, '5.3.7', '<')) {
+			$this->blowfish_mode = '2a';
+		}
 	}
 
 	function getRandomBytes($count)
@@ -188,10 +195,7 @@ class PasswordHash {
 		# of entropy.
 		$itoa64 = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-		$output = '$2a$';
-		$output .= chr(ord('0') + $this->iteration_count_log2 / 10);
-		$output .= chr(ord('0') + $this->iteration_count_log2 % 10);
-		$output .= '$';
+		$output = sprintf('$%s$%02d$', $this->blowfish_mode, $this->iteration_count_log2);
 
 		$i = 0;
 		do {
