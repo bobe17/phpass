@@ -10,6 +10,8 @@
  * - Nommage des méthodes en camelCase
  * - Utilisation de uniqid() pour l'initialisation de $random_state (repris de
  *   l'adaptation de phpass dans Wordpress)
+ * - Les arguments du constructeur sont rendus optionnels (le coût est fixé par défaut à 10)
+ * - La classe tente par défaut d'utiliser crypt() avant de se rabattre sur les hashages portables
  */
 
 #
@@ -39,20 +41,19 @@
 #
 class PasswordHash {
 	var $itoa64;
-	var $iteration_count_log2;
+	var $iteration_count_log2 = 10;
 	var $portable_hashes;
 	var $random_state;
 
-	function PasswordHash($iteration_count_log2, $portable_hashes)
+	function PasswordHash($iteration_count_log2 = null, $portable_hashes = false)
 	{
 		$this->itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-		if ($iteration_count_log2 < 4 || $iteration_count_log2 > 31)
-			$iteration_count_log2 = 8;
-		$this->iteration_count_log2 = $iteration_count_log2;
+		if (is_int($iteration_count_log2) && $iteration_count_log2 >= 4 && $iteration_count_log2 <= 31) {
+			$this->iteration_count_log2 = $iteration_count_log2;
+		}
 
 		$this->portable_hashes = $portable_hashes;
-
 		$this->random_state = microtime().uniqid(rand(), true);
 	}
 
