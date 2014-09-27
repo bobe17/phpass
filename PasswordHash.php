@@ -68,8 +68,11 @@ class PasswordHash {
 
 	function getRandomBytes($count)
 	{
+		$is_win = (strncasecmp(PHP_OS, 'WIN', 3) === 0);
 		$output = '';
-		if (function_exists('openssl_random_pseudo_bytes')) {
+
+		if (function_exists('openssl_random_pseudo_bytes')
+			&& (!$is_win || version_compare(PHP_VERSION, '5.3.4', '>='))) {
 			$output = openssl_random_pseudo_bytes($count);
 		}
 		else if (@is_readable('/dev/urandom') &&
