@@ -14,8 +14,9 @@
  * - La classe tente par défaut d'utiliser crypt() avant de se rabattre sur les hashages portables
  * - Ajout de la propriété $blowfish_mode. Utilisation du mode '2y' avec fallback
  *   vers le mode '2a' si PHP < 5.3.7
- * - Utilisation si possible de la fonction openssl_random_pseudo_bytes() dans Password::getRandomBytes()
+ * - Utilisation si possible de la fonction openssl_random_pseudo_bytes() dans PasswordHash::getRandomBytes()
  * - Ajout d'une fonction de compatibilité hash_equals() pour PHP < 5.6.0
+ * - Utilisation en deuxième alternative de mcrypt_create_iv() dans PasswordHash::getRandomBytes()
  */
 
 #
@@ -72,11 +73,18 @@ class PasswordHash {
 		$output = '';
 
 		if (function_exists('openssl_random_pseudo_bytes')
-			&& (!$is_win || version_compare(PHP_VERSION, '5.3.4', '>='))) {
+			&& (!$is_win || version_compare(PHP_VERSION, '5.3.4', '>=')))
+		{
 			$output = openssl_random_pseudo_bytes($count);
 		}
-		else if (@is_readable('/dev/urandom') &&
-		    ($fh = @fopen('/dev/urandom', 'rb'))) {
+		else if (function_exists('mcrypt_create_iv')
+			&& (!$is_win || version_compare(PHP_VERSION, '5.3.7', '>=')))
+		{
+			$output = mcrypt_create_iv($count, MCRYPT_DEV_URANDOM);
+		}
+		else if (@is_readable('/dev/urandom')
+			&& ($fh = @fopen('/dev/urandom', 'rb')))
+		{
 			$output = fread($fh, $count);
 			fclose($fh);
 		}
