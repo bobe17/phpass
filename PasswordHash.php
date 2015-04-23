@@ -253,6 +253,10 @@ class PasswordHash
 
 	public function hash($password)
 	{
+		if (strlen($password) > 4096) {
+			return '*';
+		}
+
 		$random = '';
 
 		if (CRYPT_BLOWFISH == 1 && !$this->portable_hashes) {
@@ -292,6 +296,10 @@ class PasswordHash
 
 	public function check($password, $stored_hash)
 	{
+		if (strlen($password) > 4096) {
+			return false;
+		}
+
 		$hash = $this->cryptPrivate($password, $stored_hash);
 		if ($hash[0] == '*') {
 			$hash = crypt($password, $stored_hash);
